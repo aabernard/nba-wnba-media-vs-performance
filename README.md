@@ -16,6 +16,7 @@ Research Questions:
 - Media narratives disproportionately focus on comeback team resilience and success, often neglecting opponent psychology and performance, though play by play data supported this focus.
 
 ## Repo Structure
+```
 data/
 ├── raw/
 │   ├── nba_raw_data_2023.csv
@@ -35,17 +36,16 @@ data/
 │   ├── wnba_aggregated_data.csv
 │   ├── wnba_comeback_candidates_2023.csv
 │   ├── wnba_comeback_candidates_2024.csv
-
 scripts/
 |   └── aggregate_text_data.R
 |   └── nba_scraper.py
 |   └── wnba_scraper.py
 |   └── csv_analyzer.py
-
 output/
 │   └── analysis.Rmd  
 │   └── analysis.html
 ├── README.md
+```
 
 ## Requirements
 - R 4.x

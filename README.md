@@ -19,6 +19,8 @@ Research Questions:
 ```
 data/
 ├── raw/
+│   ├── docs/
+│   │   └── qualitative_data_codebook.pdf
 │   ├── nba_raw_data_2023.csv
 │   ├── nba_raw_data_2024.csv
 │   ├── nba_raw_text_data.csv
@@ -26,8 +28,6 @@ data/
 │   ├── wnba_raw_data_2024.csv
 │   ├── wnba_raw_text_data.csv
 ├── processed/
-│   ├── docs/
-│   │   └── qualitative_data_codebook.pdf
 │   ├── bothleague_aggregated_text_data.csv
 │   ├── nba_aggregated_data.csv
 │   ├── nba_comeback_candidates_2023.csv

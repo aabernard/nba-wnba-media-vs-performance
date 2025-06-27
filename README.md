@@ -5,7 +5,8 @@ Pilot study analyzing psychological drivers of basketball comebacks via media fr
 This study combines: 
 - **Qualitative analysis:** AI assisted coding of 40 media articles (22 NBA, 18 WNBA) covering 12 major comeback games, with attention to psychological attributes like resilience, team cohesion, momentum language, and aftermath framing.
 - **Quantitative analysis:** Statistical testing of play-by-play metrics (points, field goal %, turnovers, fouls, timeouts) in the 6-minute aftermath window following a comeback-tying score.
-Research Questions:
+  
+## Research Questions:
 1. Do comeback teams statistically outperform opponents after tying the game?
 2. Do NBA vs. WNBA comeback performances differ?
 3. Is the performance gap between comeback teams and opponents larger in the NBA vs. WNBA?

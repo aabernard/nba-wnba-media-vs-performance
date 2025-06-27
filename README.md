@@ -21,6 +21,7 @@ data/
 ├── raw/
 │   ├── docs/
 │   │   └── qualitative_data_codebook.pdf
+│   │   └── qualitative_data_coding_prompt.pdf
 │   ├── nba_raw_data_2023.csv
 │   ├── nba_raw_data_2024.csv
 │   ├── nba_raw_text_data.csv

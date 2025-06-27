@@ -35,11 +35,13 @@ data/
 │   ├── wnba_aggregated_data.csv
 │   ├── wnba_comeback_candidates_2023.csv
 │   ├── wnba_comeback_candidates_2024.csv
+
 scripts/
 |   └── aggregate_text_data.R
 |   └── nba_scraper.py
 |   └── wnba_scraper.py
 |   └── csv_analyzer.py
+
 output/
 │   └── analysis.Rmd  
 │   └── analysis.html

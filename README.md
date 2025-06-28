@@ -47,7 +47,11 @@ output/
 │   └── analysis.Rmd  
 │   └── analysis.html
 ├── README.md
+├── comeback_research_2025.Rproj
 ```
+
+## How to Run
+TBWritten
 
 ## Requirements
 - R 4.x

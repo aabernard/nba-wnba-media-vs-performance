@@ -18,11 +18,6 @@ This study combines:
 
 ## Repo Structure
 ```
-docs/
-│   ├── comeback_literature_review.pdf
-│   ├── literature_review_notes.pdf
-│   ├── qualitative_data_codebook.pdf
-│   ├── qualitative_data_coding_prompt.pdf
 data/
 ├── raw/
 │   ├── nba_raw_data_2023.csv
@@ -40,6 +35,11 @@ data/
 │   ├── wnba_aggregated_data.csv
 │   ├── wnba_comeback_candidates_2023.csv
 │   ├── wnba_comeback_candidates_2024.csv
+docs/
+│   ├── comeback_literature_review.pdf
+│   ├── literature_review_notes.pdf
+│   ├── qualitative_data_codebook.pdf
+│   ├── qualitative_data_coding_prompt.pdf
 scripts/
 |   └── aggregate_text_data.R
 |   └── nba_scraper.py

@@ -1,5 +1,5 @@
 # nba-wnba-media-vs-performance
-Pilot study analyzing psychological drivers of basketball comebacks via media framing and game performance. This repository contains the code, data, and outputs comparing NBA and WNBA comeback games from 2023-24, and integrates qualitative media analysis with quantitative play-by-play data. Also contains code for scraping box score data for both leagues. 
+Pilot study analyzing psychological drivers of basketball comebacks via media framing and game performance. This repository contains the code, data, and outputs comparing NBA and WNBA comeback games from the 2022-23 and 2023-24 seasons, and integrates qualitative media analysis with quantitative play-by-play data. 
 
 ## Project Summary
 This study combines: 
@@ -51,14 +51,17 @@ output/
 ```
 
 ## How to Run
-TBWritten
+Data Analysis can be viewed without setup at:
+https://rpubs.com/abernard25/1326059
+
+Otherwise, start by cloning this repo, then open `comeback_research_2025.Rproj` to set the proper working directory. Next, install the required packages if you don't have them already. Then you're ready to knit or view the analysis .Rmd. The `scripts` folder contains a https://www.basketball-reference.com/ scraper (Python, working as of June 2025) for both NBA and WNBA, script to aggregate text data based on `game_id` (R), as well as a script (Python) that was used for double check comeback candidates from full season data. These are optional unless you intend to regenerate your own similar data set or extend the currently available ones. 
 
 ## Requirements
 - R 4.x
 - Packages: `tidyverse`, `janitor`, `ggplot2`, `lme4`, `lmerTest`, `broom`, `knitr`, `kableExtra`, `influence.ME`
 
-## License
-This project is shared for academic purposes. Please cite if used.
+## Credits/Acknowledgements
+This project was completed as part of a research assistantship at New College of Florida under the direction of Professor Andrey Skripnokov, and shared for academic purposes. Please cite if any elements are used. Google's Gemini was used as a tool for code generation (building scrapers and some R code) and article quote extraction. 
 
 ## Contact
 Alyssa A. Bernard  

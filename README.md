@@ -11,7 +11,7 @@ This study combines:
 2. Do NBA vs. WNBA comeback performances differ?
 3. Is the performance gap between comeback teams and opponents larger in the NBA vs. WNBA?
 
-## TL;DR: Key Findings
+## TL;DR: Findings
 - Comeback teams significantly outperformed opponents in points, field goal %, and turnovers during the aftermath for both leagues.
 - NBA articles emphasized psychological drivers more than WNBA, but actual performance gaps were small when aftermath of ties were tested.
 - Media narratives disproportionately focus on comeback team resilience and success, often neglecting opponent psychology and performance, though play by play data supported this focus.

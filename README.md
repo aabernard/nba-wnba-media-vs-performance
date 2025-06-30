@@ -47,7 +47,6 @@ scripts/
 |   └── csv_analyzer.py
 output/
 │   └── analysis.Rmd  
-│   └── analysis.html
 ├── README.md
 ├── comeback_research_2025.Rproj
 ```

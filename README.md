@@ -51,15 +51,25 @@ output/
 ├── comeback_research_2025.Rproj
 ```
 
+## Web Scraper Details
+The `scripts/` directory includes:
+- `nba_scraper.py`: Python script for scraping NBA game data from basketball-reference.com.
+- `wnba_scraper.py`: Python script for scraping WNBA game data from basketball-reference.com.
+- Both scrapers are current as of June 2025 and were developed to fill a gap since the last similar scraper (2018).  
+- These scripts (along with the text aggregator or comeback candidate analyzer) can be used independently to generate or update datasets for further research.
+
 ## How to Run
 Data Analysis can be viewed without setup at:
 https://rpubs.com/abernard25/1326059
 
-Otherwise, start by cloning this repo, then open `comeback_research_2025.Rproj` to set the proper working directory. Next, install the required packages if you don't have them already. Then you're ready to knit or view the code that built `analysis.Rmd`. The `scripts` folder contains two https://www.basketball-reference.com/ scrapers (one for NBA and one for WNBA, written in Python, working as of June 2025) for both NBA and WNBA, script to aggregate text data based on `game_id` (R), as well as a script (Python) that was used for double check comeback candidates from full season data. These are optional unless you intend to regenerate your own similar data set or extend the currently available ones. 
+Otherwise, start by cloning this repo, then open `comeback_research_2025.Rproj` to set the proper working directory. Next, install the required packages if you don't have them already. Then you're ready to knit or view the code that built `analysis.Rmd`, or work with the data sets for your own project. 
 
 ## Requirements
 - R 4.x
-- Packages: `tidyverse`, `janitor`, `ggplot2`, `lme4`, `lmerTest`, `broom`, `knitr`, `kableExtra`, `influence.ME`
+  - Packages: `tidyverse`, `janitor`, `ggplot2`, `lme4`, `lmerTest`, `broom`, `knitr`, `kableExtra`, `influence.ME`
+- Python 3.x (optional for scrapers)
+  - Packages: `selenium`, `webdriver-manager`, `selenium-stealth` (WNBA only), `beautifulsoup4`, `pandas`
+  - Requires Google Chrome installed 
 
 ## Credits/Acknowledgements
 This project was completed as part of a research assistantship at New College of Florida under the direction of Professor Andrey Skripnokov, and shared for academic purposes. Please cite if any elements are used. Google's Gemini was used as a tool for code generation (building scrapers and some R code) and article quote extraction. 

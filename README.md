@@ -54,7 +54,7 @@ output/
 Data Analysis can be viewed without setup at:
 https://rpubs.com/abernard25/1326059
 
-Otherwise, start by cloning this repo, then open `comeback_research_2025.Rproj` to set the proper working directory. Next, install the required packages if you don't have them already. Then you're ready to knit or view the analysis .Rmd. The `scripts` folder contains a https://www.basketball-reference.com/ scraper (Python, working as of June 2025) for both NBA and WNBA, script to aggregate text data based on `game_id` (R), as well as a script (Python) that was used for double check comeback candidates from full season data. These are optional unless you intend to regenerate your own similar data set or extend the currently available ones. 
+Otherwise, start by cloning this repo, then open `comeback_research_2025.Rproj` to set the proper working directory. Next, install the required packages if you don't have them already. Then you're ready to knit or view the code that built `analysis.Rmd`. The `scripts` folder contains a https://www.basketball-reference.com/ scraper (Python, working as of June 2025) for both NBA and WNBA, script to aggregate text data based on `game_id` (R), as well as a script (Python) that was used for double check comeback candidates from full season data. These are optional unless you intend to regenerate your own similar data set or extend the currently available ones. 
 
 ## Requirements
 - R 4.x

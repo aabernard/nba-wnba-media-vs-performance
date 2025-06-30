@@ -1,0 +1,5 @@
+Game_Date,Home_Team,Away_Team,Halftime_Score_Home,Halftime_Score_Away,Final_Score_Home,Final_Score_Away,Game_URL,Halftime_Deficit_Amount,Trailing_Team_Halftime
+06/04/2023,New York Liberty,Chicago Sky,47,30,82,86,https://www.basketball-reference.com/wnba/boxscores/202306040NYL.html,17,Chicago Sky
+08/24/2023,Connecticut Sun,New York Liberty,48,34,90,95,https://www.basketball-reference.com/wnba/boxscores/202308240CON.html,14,New York Liberty
+08/24/2023,Chicago Sky,Las Vegas Aces,50,37,87,94,https://www.basketball-reference.com/wnba/boxscores/202308240CHI.html,13,Las Vegas Aces
+08/25/2023,Atlanta Dream,Los Angeles Sparks,52,39,78,83,https://www.basketball-reference.com/wnba/boxscores/202308250ATL.html,13,Los Angeles Sparks

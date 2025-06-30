@@ -1,0 +1,13 @@
+Game ID,League,Comeback Team (CBT),Opponent Team (OPP),Game Date,PBP Link,Halftime Scores (CBT-OPP),Score Tied At,Tie Quarter,Tie Time (Min:Sec:Mili),Aftermath End Quarter,Aftermath End Time (Qtr:Min:Sec),C- Full Timeouts,O- Full Timeouts,C -Points Scored, C- Points Allowed,C- FG Made,C- FG Attempts ,O- FG Made,O- FG Attempts,C- Turnovers ,O- Turnovers ,C- Fouls Committed,O- Fouls Committed 
+nba_01,NBA,SAC,ATL_N,12/29/2023,https://www.basketball-reference.com/boxscores/pbp/202312290ATL.html,53-71,110,4,4:32.0,4,0:00.0,1,2,9,0,3,6,0,8,0,2,2,3
+nba_02,NBA,MEM,NOP,12/19/2023,https://www.basketball-reference.com/boxscores/pbp/202312190NOP.html,41-60,109,4,1:56.0,4,0:00.0,1,0,6,4,3,4,2,5,0,0,0,0
+nba_03,NBA,TOR,WAS,11/13/2023,https://www.basketball-reference.com/boxscores/pbp/202311130TOR.html,45-64,107,4,0:51.0,4,0:00.0,1,2,4,0,2,2,0,1,0,2,1,0
+nba_04,NBA,ATL_N,MIN,10/30/2023,https://www.basketball-reference.com/boxscores/pbp/202310300ATL.html,60-79,98,3,0:04.0,4,6:11.0,0,1,15,4,8,12,2,10,0,3,0,1
+nba_05,NBA,LAC,CLE,04/07/2024,https://www.basketball-reference.com/boxscores/pbp/202404070LAC.html,59-80,115,4,1:16.0,4,0:00.0,1,2,8,3,3,3,1,4,0,0,0,1
+nba_06,NBA,POR,WAS,02/03/2023,https://www.basketball-reference.com/boxscores/pbp/202302030WAS.html,51-69,99,4,8:19.0,4,0:00.0,0,1,20,10,5,8,5,10,1,2,1,1
+wnba_01,WNBA,CHI,NYL,2023-06-04,https://www.basketball-reference.com/wnba/boxscores/pbp/202306040NYL.html,30-47,70,4,5:13.0,4,0:00.0,0,2,18,12,6,7,6,10,3,4,7,3
+wnba_02,WNBA,LVA,CHI,2023-08-24,https://www.basketball-reference.com/wnba/boxscores/pbp/202308240CHI.html,37-50,62,3,2:52.0,4,8:52.0,0,0,13,9,4,7,3,11,2,2,3,2
+wnba_03,WNBA,LOS,ATL_W,2023-08-25,https://www.basketball-reference.com/wnba/boxscores/pbp/202308250ATL.html,39-52,62,3,1:18.0,4,7:42.0,0,0,5,2,2,6,0,4,1,3,0,1
+wnba_04,WNBA,LVA,CON,2024-09-06,https://www.basketball-reference.com/wnba/boxscores/pbp/202409060CON.html,26-38,65,4,2:09.0,4,0:00.0,1,1,8,2,2,3,1,4,0,0,1,0
+wnba_05,WNBA,ATL_W,SEA,2024-08-16,https://www.basketball-reference.com/wnba/boxscores/pbp/202408160ATL.html,29-41,63,4,6:24.0,4,0:24.0,2,1,15,12,5,9,4,9,1,1,2,2
+wnba_06,WNBA,IND,LOS,2024-05-24,https://www.basketball-reference.com/wnba/boxscores/pbp/202405240LAS.html,34-45,45,3,6:00.0,3,0:00.0,0,0,10,12,4,11,4,7,0,4,2,3

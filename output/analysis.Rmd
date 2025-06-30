@@ -1,0 +1,1331 @@
+---
+title: "Media Narratives and On-Court Realities in Major NBA and WNBA Games"
+author: "Alyssa A. Bernard"
+date: "2025-06"
+output: 
+  html_document:
+    theme: journal
+    toc: true
+    toc_float: true
+    highlight: haddock
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(janitor)
+library(ggplot2)
+library(lme4)
+library(influence.ME)
+library(dplyr)
+library(lmerTest)
+library(knitr)
+library(kableExtra)
+
+text_data <- read_csv("../data/processed/bothleague_aggregated_text_data.csv") %>%
+  clean_names()
+
+code_cols <- text_data %>%
+  select(matches("c_|o_")) %>%
+  colnames()
+
+library(knitr)
+library(kableExtra)
+
+style_table <- function(df, caption ="Table") {
+  kable(df, digits = 3, caption = caption) %>%
+    kable_styling(bootstrap_options = c("striped", "condensed"), full_width = FALSE)
+}
+```
+
+### Research Questions and Project Structure
+This project explored the intersection of media narratives and on-court performance during major comeback games in the NBA and WNBA. The core research questions were:
+
+    1. Do comeback teams statistically outperform opponents after tying a game 
+    post-halftime deficit?
+    2. Do NBA vs. WNBA comeback performances differ in the tie aftermath period?
+    3. Is the performance gap between comeback teams and opponents larger in the NBA vs. WNBA?
+    
+To address these questions, the project was structured in two parts:
+
+    - Qualitative Analysis: 
+      Media articles covering 12 major comeback games were collected and coded for psychological,
+      emotional, and aftermath-related language using a structured codebook. These codes were 
+      aggregated to summarize narrative emphasis by team role (comeback vs. opponent), league 
+      (NBA vs. WNBA), and media outlet.
+    
+    - Quantitative Analysis: 
+      Play-by-play performance data from the same 12 games were compiled, focusing on a six
+      minute window after the comeback team first tied the score. Metrics such as points, field 
+      goal percentage, turnovers, fouls, and timeouts were analyzed to assess whether narrative 
+      themes were reflected in actual performance patterns.
+This dual approach was intended to create a direct comparison between narrative construction and statistical performance metric reality.
+
+### Qualitative Dataset: Article Selection and Coding Procedures
+To explore how psychological factors are portrayed in basketball comeback narratives, I curated a data set of 
+media articles covering notable NBA and WNBA games from the 2023-2024 seasons. Each selected game involved a successful
+comeback after halftime, defined as overcoming a second quarter deficit of at least 18 points for NBA or 11 points for WNBA, 
+followed by the comeback team tying the score and ultimately winning in regulation. 
+
+#### Game Selection Criteria
+Games were selected chronologically from scraped data of NBA and WNBA games from `basketball-reference.com` across the 
+2023-2024 seasons, each meeting the following criteria:
+
+    - The comeback team trailed by ≥18 points (NBA) or ≥11 (WNBA) at halftime
+    - The comeback team tied the score at any point after the second half
+    - The comeback team ultimately won without entering overtime
+    - Complete play-by-play data was publicly available
+    - Media coverage existed from at least one major outlet 
+    
+This process resulted in a final sample of 12 games: 6 from the NBA and 6 from the WNBA. 
+
+#### Article Collection and Snippet Coding
+For each of the 12 games, I manually searched for articles published by major outlets (ESPN, NYT Athletic, Sports Illustrated, etc)
+within 48 hours of the game. The initial goal was to collect 4 articles per game across comparable outlets, but limited coverage
+of some games meant that in a few cases only 2-3 articles were available. 
+
+#### Snippet Extraction and Coding
+Each article was copied into Google Gemini's interface to extract direct quotes that matched predefined 
+psychological and narrative categories, which were chosen after reviewing academic literature and community
+written sources on how comebacks are built by athletes and perceived by the public:
+
+    - Individual Resilence
+    - Self Efficacy
+    - Team Cohesion
+    - Emotional Regulation
+    - Verbal Persuasion
+    - Home Court Advantage/Crowd Influence
+    - Aftermath Language (Momentum, Draining, Performance Outcomes)
+    - Gendered Language 
+    
+Coding was conducted with strict literal adherence to code definitions, following definitions with 
+clear inclusion and exclusion criteria for each category. Look to `qualitative_data_codebook.pdf`
+to see these criteria. Snippets were marked by type (like author-written, headline, player quote, coach quote) 
+and tagged with team perspective (comeback or opponent team). Multi-code attribution was
+permitted when snippets matched multiple categories. All snippets were reviewed for 
+strict literal adherence to the codebook definitions. 
+
+#### Data Aggregation
+The full data set was initially stored in two separate files:
+  
+    - `nba_raw_text_data.csv`
+    - `wnba_raw_text_data.csv`
+    
+Each file contained coded article snippets for it's respective league that were then combined into a single file, 
+`bothleague_aggregated_text.csv`. This was completed using an R script to verify and count code occurrences by league, 
+followed by manually copying and pasting to merge the data sets
+while preserving all metadata. 
+
+The resulting, final, data set includes over 1,800 coded snippets across 40 unique articles.
+
+### Exploratory Analysis
+#### Article Distribution by League
+```{r echo=FALSE, warning=FALSE}
+# Count articles per league
+text_data %>% 
+  count(league) %>% 
+  ggplot(aes(x = league, y = n, fill = league)) +
+  geom_col() +
+  labs(title = "Article Count by League", x = "League", y = "Number of Articles") +
+  theme_minimal()
+```
+
+Before looking into the frequencies of coded content, this figure shows the distribution of articles across the two leagues.
+The final data set includes a few more NBA articles (n = 22) than WNBA articles (n = 18). This gap reflects both the initial 
+availability of media coverage and the relative ease of locating multiple articles for NBA games within 48 hours of play.
+
+While the goal was to maintain balanced representation across leagues, WNBA games often had fewer qualifying articles available
+from major outlets like ESPN, NYT Athletic, and Sports Illustrated. This disparity is acknowledged as a limitation of the data set, but 
+the inclusion of 18 WNBA articles still provides a substantial basis for gendered comparison of halftime deficit comebacks and media portrayals 
+of comeback narratives.
+
+#### Top Media Sources
+```{r echo=FALSE}
+# Count articles per media outlet (top 10)
+text_data %>% 
+  count(media_outlet) %>%
+  arrange(desc(n)) %>%
+  slice_head(n = 10) %>%  # Ensure it's exactly 10
+  ggplot(aes(x = reorder(media_outlet, n), y = n, fill = media_outlet)) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(title = "Top 10 Media Outlets by Article Count", 
+       x = "Media Outlet", y = "Article Count") +
+  theme_minimal()
+```
+
+This figure shows the distribution of articles by media outlet across the full dataset. ESPN was the most
+represented source by a significant margin, followed then by NYT Athletic and Sports Illustrated. These three
+outlets collectively accounted for the majority of articles analyzed, which may reflect their dominant presence
+in mainstream sports media. A range of smaller outlets, including Swish Appeal, Yahoo Sports, and several team-specific 
+or regional sources, helped fill in coverage gaps particularly for WNBA games.
+
+#### Top 10 Attributes by Team Role
+```{r echo=FALSE}
+# Split code into CBT/OPP and count total mentions
+text_data %>%
+  pivot_longer(cols = all_of(code_cols), names_to = "code", values_to = "count") %>%
+  mutate(
+    team_role = case_when(
+      str_detect(code, "^c_") ~ "Comeback Team",
+      str_detect(code, "^o_") ~ "Opponent Team",
+      TRUE ~ "Unknown"
+    ),
+    code_clean = str_remove(code, "^[co]-\\s*")
+  ) %>%
+  group_by(team_role, code_clean) %>%
+  summarise(total_count = sum(count, na.rm = TRUE), .groups = "drop") %>%
+  group_by(code_clean) %>%
+  mutate(total_overall = sum(total_count)) %>%
+  ungroup() %>%
+  filter(code_clean %in% slice_max(., total_overall, n = 10)$code_clean) %>%
+  ggplot(aes(x = reorder(code_clean, total_overall), y = total_count, fill = team_role)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  labs(title = "Top 10 Codes by Team Role",
+       x = "Code", y = "Total Mentions", fill = "Team Role") +
+  theme_minimal()
+```
+
+Comeback teams (CBTs) overwhelmingly dominate code frequency, especially in psychological and aftermath-related codes, 
+suggesting that narratives tend to center resilience and performance of winners while minimizing detail about opponents. 
+This figure shows total code mentions broken down by comeback team versus opponent. CBTs were the clear 
+narrative center, with 8 of the 10 most frequent codes attributed to comeback teams. Especially telling is the fact 
+that `c_aft_perf_outcome_lang` alone appeared over 550 times, more than any other code by a wide margin.
+
+Codes linked to psychological strength and team dynamics (`c_att_ind_resilience`, `c_att_team_efficacy_cohesion`) 
+were overwhelmingly more common for comeback teams, while opponent team coverage focused primarily on aftermath
+or consequence (`o_aft_perf_outcome_lang`, `o_aft_draining_lang`).
+
+This suggests a clear asymmetry in narrative attention when turning focus away from neutral performance metrics: comeback teams
+seem to be framed as triumphant, while opponents are framed as tired, overwhelmed, or faltering, reinforcing a winner-loser 
+binary even in the language used to describe effort and emotion.
+
+#### Average Code Frequency Across All Articles
+```{r echo=FALSE}
+# Average code frequency across the full dataset
+text_data %>%
+  summarise(across(all_of(code_cols), ~ mean(.x, na.rm = TRUE))) %>%
+  pivot_longer(everything(), names_to = "code", values_to = "avg_count") %>%
+  ggplot(aes(x = reorder(code, avg_count), y = avg_count)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(
+    title = "Average Code Frequency Across All Articles",
+    x = "Code",
+    y = "Average Mentions per Article"
+  ) +
+  theme_minimal()
+```
+
+This figure provides a baseline view of which psychological and aftermath related codes appeared most 
+frequently across all 40 articles in the data set. Performance outcome language, especially for the comeback 
+teams (`c_aft_perf_outcome_lang`), was by far the most prevalent with ~14 mentions per article on 
+average. This suggests a strong narrative emphasis on outcome framing in comeback scenarios. 
+
+Other comeback-oriented codes such as `c_att_ind_resilience`, `c_att_team_efficacy_cohesion`, and
+`c_aft_momentum_lang` followed closely, reinforcing a pattern of attributing comeback success to internal 
+psychological strength and team dynamics. Codes associated with the opponent team (such as `o_aft_draining_lang`, 
+`o_att_momentum_lang`) were less frequent overall which could reflect an asymmetry in narrative attention. 
+
+Here's a closer look at the average mentions per article:
+```{r echo=FALSE}
+text_data %>%
+  summarise(across(all_of(code_cols), ~ mean(.x, na.rm = TRUE))) %>%
+  pivot_longer(everything(), names_to = "code", values_to = "avg_mentions_per_article") %>%
+  arrange(desc(avg_mentions_per_article)) %>% style_table()
+```
+
+Gendered language codes were virtually nonexistent across both leagues, with zero occurrences in the data set.
+While no literal gendered codes were detected, this absence may reflect a genuine reduction in overt narrative 
+gendering, or maybe a shift toward more subtle forms of gendered framing not captured by this method, like subtle
+differences in tone, emphasis, or omission that fall outside the scope of literal keyword-based coding. The disparity
+in article availability between NBA and WNBA games might reveal a deeper layer of representational bias. The 
+consistent difficulty in locating timely, in-depth WNBA coverage could reflect the ongoing marginalization of 
+women’s sports in mainstream media. In this way, the absence of gendered language should not be read as neutrality,
+but rather perhaps as part of a broader ecosystem in which male athletes’ stories could be told more often, more vividly, 
+and with greater narrative investment.
+
+#### Average Code Frequency Among Top Media Outlets
+```{r echo=FALSE}
+# Find top 3 most common outlets
+top_outlets <- text_data %>%
+  count(media_outlet) %>%
+  arrange(desc(n)) %>%
+  slice_max(n, n = 3) %>%   # changed from 4 to 3
+  pull(media_outlet)
+
+# Filter and summarize by outlet
+text_data %>%
+  filter(media_outlet %in% top_outlets) %>%
+  group_by(media_outlet) %>%
+  summarise(across(all_of(code_cols), ~ mean(.x, na.rm = TRUE))) %>%
+  pivot_longer(-media_outlet, names_to = "code", values_to = "avg_count") %>%
+  ggplot(aes(x = reorder(code, avg_count), y = avg_count, fill = media_outlet)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  labs(
+    title = "Average Code Frequency by Top 3 Media Outlets",
+    x = "Code",
+    y = "Average Mentions per Article"
+  ) +
+  theme_minimal()
+```
+
+This plot isolates code frequency averages across articles published by the three most represented media outlets:
+ESPN, NYT Athletic, and Sports Illustrated. While the overall order of codes remains largely consistent, subtle nuances
+emerge. NYT Athletic used performance outcome language surrounding CBTs at a notably higher rate than ESPN or 
+Sports Illustrated, which could suggest a more results driven framing in their coverage (though it's important to note,
+the average snippets per article for NYT were about 14 occurrences higher than ESPN and about 22 occurrences higher than
+Sports Illustrated). Sports Illustrated had higher mentions of `c_att_team_efficacy_cohesion`, possibly indicating a 
+greater emphasis on team-based narratives. ESPN, while high in both regards, appeared more moderate across the board. 
+
+This reveals that although performance outcomes dominate across outlets, narrative tone and emphasis may differ
+by publication, shaping the reader’s perception of what drives a successful comeback.
+
+#### Average Code Frequency By League and Team Role
+```{r echo=FALSE}
+# Change code columns to long format and separate by CBT vs OPP
+text_data %>%
+  pivot_longer(cols = all_of(code_cols), names_to = "code", values_to = "count") %>%
+  mutate(
+    team_role = case_when(
+      str_detect(code, "^c_") ~ "Comeback Team",
+      str_detect(code, "^o_") ~ "Opponent Team",
+      TRUE ~ "Unknown"
+    ),
+    code_clean = str_remove(code, "^[co]-\\s*")  # removes the C-/O- prefix for cleaner plotting
+  ) %>%
+  group_by(league, team_role, code_clean) %>%
+  summarise(avg_count = mean(count, na.rm = TRUE), .groups = "drop") %>%
+  ggplot(aes(x = reorder(code_clean, avg_count), y = avg_count, fill = team_role)) +
+  geom_col(position = "dodge") +
+  facet_wrap(~ league, scales = "free_y") +
+  coord_flip() +
+  labs(title = "Average Code Frequency by League and Team Role",
+       x = "Code", y = "Average Count", fill = "Team Role") +
+  theme_minimal()
+```
+
+The pattern observed in this figure holds similarly across both NBA and WNBA games, with comeback
+teams receiving more narrative attention across nearly every code. However, WNBA articles displayed
+a slightly flatter curve with lower overall averages and narrower gaps between comeback and 
+opponent team mentions. This could reflect not only the shorter average article length in 
+WNBA coverage but also the smaller total number of articles available for those games. It may also
+point to a more balanced or restrained narrative style in how WNBA comebacks are reported. 
+Additionally, these patterns could hint at subtle differences in how media outlets frame the
+emotional and psychological states of male versus female athletes, particularly in codes like 
+`c_att_ind_resilience` and `c_att_team_efficacy_cohesion`, which, while still prominent, appear 
+slightly less frequently in WNBA narratives than NBA ones.
+
+### Testing League-Level Narrative Differences
+#### Two-sample t-testing and paired t-testing
+To begin to survey whether specific psychological or aftermath related attributes differ 
+significantly (α = .05) between NBA and WNBA, two-sample t-tests were conducted for the five
+most frequent coded categories, including:
+
+  1. `c_aft_perf_outcome_lang` (comeback team performance framing),
+  2. `o_aft_perf_outcome_lang` (opponent team performance framing),
+  3. `c_att_ind_resilience` (comeback team individual resilience),
+  4. `c_att_team_efficacy_cohesion` (comeback team team efficacy/cohesion), and
+  5. `c_aft_momentum_lang` (comeback team momentum-related language).
+  
+Each test compared the mean frequency of the code between NBA and WNBA articles. While this does
+not account for article length or media outlet, it serves as a quick check on whether leagues differ
+systematically in how these key narrative elements are used. Notably, four of the five most frequently
+coded attributes were comeback team–focused, further supporting the idea that sports media narratives 
+tend to emphasize the psychological qualities and aftermath experiences of winning 
+teams, rather than offering balanced framing of both sides. 
+
+```{r echo=FALSE}
+library(broom)
+library(dplyr)
+
+# Define top 5 variables
+top_codes <- c("c_aft_perf_outcome_lang", 
+               "o_aft_perf_outcome_lang", 
+               "c_att_ind_resilience", 
+               "c_att_team_efficacy_cohesion", 
+               "c_aft_momentum_lang")
+
+# Run t-tests and collect results
+t_results <- lapply(top_codes, function(code) {
+  formula <- as.formula(paste(code, "~ league"))
+  result <- t.test(formula, data = text_data)
+  tidy_result <- tidy(result)
+  tidy_result$code <- code
+  return(tidy_result)
+}) %>%
+  bind_rows() %>%
+  select(code, estimate1, estimate2, statistic, p.value, conf.low, conf.high) %>%
+  rename(
+    mean_nba = estimate1,
+    mean_wnba = estimate2,
+    t_statistic = statistic,
+    p_value = p.value,
+    ci_lower = conf.low,
+    ci_upper = conf.high
+  ) %>% style_table("Code Frequency Differences Between NBA and WNBA Comeback Narratives")
+
+# View result
+t_results
+```
+
+NBA and WNBA articles used neutral aftermath performance language almost equally (14.91 vs 14.22 mentions
+on average). The p-value of 0.80 shows that there was no significant difference between leagues. For opponent
+team aftermath performance language, there was again nearly identical use (8.00 vs 7.67). The difference is 
+tiny and non-significant (p = 0.88), however there remains a large disparity between how often this type of
+language is used for CBTs compared to opponent teams. This reinforces that opponent teams are
+framed similarly in both leagues, and that comeback narratives are often centered on team that made the comeback. 
+
+NBA articles showed slightly more focus on individual resilience (6.23 vs 4.83) when compared to WNBA, but 
+the difference isn’t statistically significant (p = 0.19). There’s a hint of difference, but it’s not strong
+enough to call conclusive. As for team cohesion, there is a similar pattern between WNBA and NBA mentions, with 
+NBA having a higher mean mention (6.14 vs 4.17), but again the difference was not statistically significant (p = 0.15).
+And for momentum language in the aftermath of the comeback, there are slightly more mentions in NBA articles (3.95 vs 3.39),
+but this is not statistically significant (p = 0.39). Both leagues use momentum language moderately (compared to the ~14 
+mentions of neutral comeback language) and similarly.
+
+To further confirm the suspicion of whether CBTs are framed more heavily in aftermath-oriented language than their opponents, 
+a paired t-test was conducted comparing `c_aft_perf_outcome_lang` and `o_aft_perf_outcome_lang` counts within each article. This test evaluates
+whether media narratives (combining both NBA and WNBA) systematically emphasize the performance outcomes of winning teams more than those of
+the teams that lost the lead.
+
+```{r echo=FALSE}
+library(broom)
+
+# Paired t-test between comeback team and opponent team aftermath performance language
+aft_ttest <- t.test(
+  text_data$c_aft_perf_outcome_lang,
+  text_data$o_aft_perf_outcome_lang,
+  paired = TRUE
+)
+
+# Tidy and label the result
+aft_results_tbl <- tidy(aft_ttest) %>%
+  select(
+    estimate,
+    statistic,
+    p.value,
+    conf.low,
+    conf.high
+  ) %>%
+  rename(
+    mean_diff = estimate,
+    t_statistic = statistic,
+    p_value = p.value,
+    ci_lower = conf.low,
+    ci_upper = conf.high
+  ) %>%
+  mutate(attribute = "aft_perf_outcome_lang") %>%
+  select(attribute, everything()) %>% style_table("T-Test Comparing Aftermath Performance Language Between CBTs and Opponents")
+
+# View the result
+aft_results_tbl
+```
+
+The estimated mean difference in aftermath performance language was 6.75 mentions (95% CI: 2.81, 10.69), indicating significantly more narrative emphasis on CBTs compared to their opponents (p = 0.0013).
+
+#### Mixed Effect Modeling using `lme4::lmer()`
+To further test whether narrative emphasis differed by league, linear mixed-effects models were fit with `league` as a fixed effect and random intercepts 
+for `game_id` and `media_outlet`. Models were run separately for comeback team psychological and aftermath framing to account for variation in 
+game context and outlet style.
+
+This approach helps to control for two major sources of variability:
+
+    - Game Context, some games may naturally prompt more psychological or emotional framing due 
+    to their stakes, players, or timing
+    - Media Outlet, some vary in editorial tone, audience, and writing style, which
+    all shape narrative emphasis 
+
+To reduce noise from sparsely represented sources, analysis was restricted to the top three most frequent outlets: ESPN, NYT Athletic, and 
+Sports Illustrated. This was intended to improve model stability while still allowing for outlet-level variation to be modeled.
+
+For each article, summary scores were calculated to represent narrative emphasis:
+
+    - A comeback team psychological score (`cbt_psych_score`) was computed as the sum of all comeback team psychological code mentions:
+        - Individual Resilience
+        - Self-Efficacy
+        - Team Efficacy/Cohesion
+        - Emotional Regulation
+        - Verbal Persuasion
+    - A comeback team aftermath score (`cbt_after_score`) was computed as the sum of comeback team aftermath language code mentions:
+        - Performance Outcome Language
+        - Momentum Language
+        - Draining/Depletion Language
+
+This method provides a compact measure of the psychological and emotional emphasis in narrative framing, more suitable for modeling than individual attributes. 
+
+Due to persistent singular fit warnings in the opponent models, those instances were excluded. These warnings indicated zero or near-zero variance 
+in opponent scores across games or media outlets, suggesting little meaningful clustering or variability to control for.
+
+```{r include=FALSE}
+# Define column groups 
+cbt_psych <- c("c_att_ind_resilience", "c_att_self_efficacy", "c_att_team_efficacy_cohesion", 
+               "c_att_emotional_reg", "c_att_verbal_persuasion")
+
+opp_psych <- c("o_att_ind_resilience", "o_att_self_efficacy", "o_att_team_efficacy_cohesion", 
+               "o_att_emotional_reg", "o_att_verbal_persuasion")
+
+cbt_after <- c("c_aft_perf_outcome_lang", "c_aft_momentum_lang", "c_aft_draining_lang")
+
+opp_after <- c("o_aft_perf_outcome_lang", "o_aft_momentum_lang", "o_aft_draining_lang")
+
+# Identify top 3 outlets 
+top_outlets <- text_data %>%
+  count(media_outlet) %>%
+  arrange(desc(n)) %>%
+  slice(1:3) %>%
+  pull(media_outlet)
+
+# Filter to top 3 and calculate scores
+top_data <- text_data %>%
+  filter(media_outlet %in% top_outlets) %>%
+  rowwise() %>%
+  mutate(
+    cbt_psych_score = sum(c_across(all_of(cbt_psych)), na.rm = TRUE),
+    opp_psych_score = sum(c_across(all_of(opp_psych)), na.rm = TRUE),
+    cbt_after_score = sum(c_across(all_of(cbt_after)), na.rm = TRUE),
+    opp_after_score = sum(c_across(all_of(opp_after)), na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Fit Models
+cbt_psych_model <- lmer(cbt_psych_score ~ league + (1 | game_id) + (1 | media_outlet), data = top_data)
+cbt_after_model <- lmer(cbt_after_score ~ league + (1 | game_id) + (1 | media_outlet), data = top_data)
+# opp_psych_model <- lmer(opp_psych_score ~ league + (1 | game_id) + (1 | media_outlet), data = top_data)
+# opp_after_model <- lmer(opp_after_score ~ league + (1 | game_id) + (1 | media_outlet), data = top_data)
+
+summary(cbt_psych_model)
+summary(cbt_after_model)
+```
+```{r echo=FALSE}
+library(broom)
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+# Extract coefficients and stats
+get_lmer_fixed_table <- function(model, model_name = "model") {
+  coefs <- summary(model)$coefficients
+  as_tibble(coefs, rownames = "Effect") %>%
+    mutate(Model = model_name) %>%
+    select(Model, everything()) %>%
+    rename(
+      Estimate = Estimate,
+      `Std. Error` = `Std. Error`,
+      `t value` = `t value`,
+      `p value` = `Pr(>|t|)`
+    )
+}
+
+# Apply to your models
+psych_tbl <- get_lmer_fixed_table(cbt_psych_model, "cbt_psych_score")
+after_tbl <- get_lmer_fixed_table(cbt_after_model, "cbt_after_score")
+
+# Combine
+result_tbl <- bind_rows(psych_tbl, after_tbl)
+
+# Display
+kable(result_tbl, digits = 3, caption = "Summary of Mixed Model Fixed Effects") %>%
+  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = FALSE)
+```
+
+
+#### Psychological Framing (Comeback Team)
+
+    - Intercept (NBA baseline):  On average, articles include 16.13 comeback team 
+    psychological codes for NBA games (p = 0.072).
+    
+    - League effect: 
+    WNBA articles include ~7.72 fewer psychological codes on average than NBA articles.
+    This difference is borderlined statistical significance (p = 0.0936), but suggests a 
+    trend toward reduced psychological attribution in WNBA comeback coverage.
+    
+    - Random effects:
+    Media outlet SD = 8.11 — substantial outlet-level variability in psychological framing.
+    Game ID SD = 4.43 — moderate variation based on the game being covered.
+    
+#### Aftermath Framing (Comeback Team)
+
+    - Intercept (NBA baseline): On average, articles include 17.98 comeback team
+    aftermath codes for NBA games.
+    
+    - League effect:
+    WNBA articles use ~3.66 fewer aftermath codes on average compared to NBA articles.
+    This difference is again not statistically significant (p = 0.4099).
+    
+    - Random effects:
+    Media outlet SD = 6.35 — almost a substainal variation in aftermath framing across outlets.
+    Game ID SD = 3.03 — lower game-level variability than in the psychological model.
+    
+#### Refitting Psychological Framing for CBT Model 
+The goal with the next model was to calculate a per-snippet rate of narrative framing rather than relying on raw code totals, which could be biased by differences in article size. This decision was motivated by the fact that two of the initial models—especially comeback team psychological framing—showed effects that approached significance, raising the question of whether shorter WNBA articles with fewer snippets might have artificially lowered code counts. 
+
+The same scoring system was used in this model, and a new variable called `snippet_count`, 
+was introduced and used to standardize the scores that were used as response variables to address the 
+variation in article length between media outlets. Dividing `score / snippet_count` in each of the scoring 
+metrics allowed for comparisons of narrative tone that are not confounded by differences in article size.
+
+```{r include=FALSE}
+# Define the code groups
+cbt_psych <- c("c_att_ind_resilience", "c_att_self_efficacy", 
+               "c_att_team_efficacy_cohesion", "c_att_emotional_reg", 
+               "c_att_verbal_persuasion")
+
+opp_psych <- c("o_att_ind_resilience", "o_att_self_efficacy", 
+               "o_att_team_efficacy_cohesion", "o_att_emotional_reg", 
+               "o_att_verbal_persuasion")
+
+cbt_after <- c("c_aft_perf_outcome_lang", "c_aft_momentum_lang", 
+               "c_aft_draining_lang")
+
+opp_after <- c("o_aft_perf_outcome_lang", "o_aft_momentum_lang", 
+               "o_aft_draining_lang")
+
+snippet_cols <- c(cbt_psych, opp_psych, cbt_after, opp_after)
+
+# Calculate snippet_count and standardize scores
+standardized_data <- top_data %>%
+  rowwise() %>%
+  mutate(
+    snippet_count = sum(c_across(all_of(snippet_cols)), na.rm = TRUE),
+    cbt_psych_score_std = cbt_psych_score / snippet_count,
+    cbt_after_score_std = cbt_after_score / snippet_count,
+    opp_psych_score_std = opp_psych_score / snippet_count,
+    opp_after_score_std = opp_after_score / snippet_count
+  ) %>%
+  ungroup()
+
+# Fit mixed models with standardized outcomes
+cbt_psych_model_std <- lmer(
+  cbt_psych_score_std ~ league + (1 | game_id) + (1 | media_outlet),
+  data = standardized_data
+)
+
+cbt_after_model_std <- lmer(
+  cbt_after_score_std ~ league + (1 | game_id) + (1 | media_outlet),
+  data = standardized_data
+)
+
+opp_psych_model_std <- lmer(
+  opp_psych_score_std ~ league + (1 | game_id) + (1 | media_outlet),
+  data = standardized_data
+)
+
+opp_after_model_std <- lmer(
+  opp_after_score_std ~ league + (1 | game_id) + (1 | media_outlet),
+  data = standardized_data
+)
+
+# View model summaries
+summary(cbt_psych_model_std)
+summary(cbt_after_model_std)
+summary(opp_psych_model_std)
+summary(opp_after_model_std)
+```
+
+```{r echo=FALSE}
+# Helper function to extract fixed effects
+extract_fixed_manual <- function(model, model_name) {
+  coefs <- summary(model)$coefficients
+  as.data.frame(coefs) %>%
+    tibble::rownames_to_column("Effect") %>%
+    mutate(Model = model_name) %>%
+    select(Model, Effect, Estimate, `Std. Error`, df = `df`, `t value`, `Pr(>|t|)`) %>%
+    rename(
+      Std.Error = `Std. Error`,
+      t.value = `t value`,
+      p.value = `Pr(>|t|)`
+    )
+}
+
+# Extract for each model
+cbt_psych_tbl <- extract_fixed_manual(cbt_psych_model_std, "CBT Psych")
+cbt_after_tbl <- extract_fixed_manual(cbt_after_model_std, "CBT Aftermath")
+opp_psych_tbl <- extract_fixed_manual(opp_psych_model_std, "OPP Psych")
+opp_after_tbl <- extract_fixed_manual(opp_after_model_std, "OPP Aftermath")
+
+# Combine
+all_models_tbl <- bind_rows(cbt_psych_tbl, cbt_after_tbl, opp_psych_tbl, opp_after_tbl)
+
+# Display
+kable(all_models_tbl, digits = 3, caption = "Summary of Mixed Model Fixed Effects (Standardized)") %>%
+  kable_styling(bootstrap_options = c("striped", "condensed"), full_width = FALSE)
+```
+
+#### Psychological Framing (Comeback Team, Standardized)
+
+    - Intercept (NBA baseline): On average, articles contain 0.326 comeback team psychological codes per snippet for NBA games (p = 0.013).
+    
+    - League effect:  
+    WNBA articles contain ~0.037 fewer psychological codes per snippet on average compared to NBA articles.  
+    This difference is not statistically significant (p = 0.617).
+
+#### Aftermath Framing (Comeback Team, Standardized)
+
+    - Intercept (NBA baseline): On average, articles contain 0.367 comeback team aftermath codes per snippet for NBA games (p = 0.001).
+    
+    - League effect:  
+    WNBA articles contain ~0.100 more aftermath codes per snippet on average compared to NBA articles.  
+    This difference is not statistically significant (p = 0.184).
+
+#### Psychological Framing (Opponent, Standardized)
+
+    - Intercept (NBA baseline): On average, articles contain 0.029 opponent psychological codes per snippet for NBA games (p = 0.047).
+    
+    - League effect:  
+    WNBA articles contain ~0.010 more opponent psychological codes per snippet on average compared to NBA articles.  
+    This difference is not statistically significant (p = 0.570).
+
+#### Aftermath Framing (Opponent, Standardized)
+
+    - Intercept (NBA baseline): On average, articles contain 0.280 opponent aftermath codes per snippet for NBA games (p = 0.047).
+    
+    - League effect:  
+    WNBA articles contain ~0.084 fewer opponent aftermath codes per snippet on average compared to NBA articles.  
+    This difference is not statistically significant (p = 0.315).
+
+After standardizing for snippet count, the apparent league differences in narrative emphasis shifted notably compared to the original mixed model results. In the unstandardized models, WNBA articles appeared to include significantly fewer comeback team psychological codes (estimate = -7.72, p = 0.094), suggesting a potential narrative gap. However, once code counts were adjusted for article length, this league effect shrank dramatically (estimate = -0.037, p = 0.617), indicating that the initial difference was largely driven by structural factors like shorter WNBA articles rather than genuine differences in narrative tone. Similarly, for aftermath framing, the original model showed a small, non-significant negative league effect (estimate = -3.66, p = 0.410), but after standardization the effect not only diminished but reversed direction (estimate = +0.100, p = 0.184), again underscoring that article length was causing noise.
+    
+#### Refining the Model for Greater Precision
+To further examine whether the narrative differences by league are significant or not, a refitted linear mixed-effects 
+model was constructed to try and include more granular controls. Two limitations of the previous models stuck out to 
+me: the fact that the amount of snippets present from each article where not controlled for in the first, and that WNBA was 
+definitely lacking in representation from the top three media outlets. So the updated model includes `league` and 
+`media_outlet` (adding WNBA.com as the fourth top media outlet to broaden sample size and WNBA representation) as 
+fixed effects, while retaining `game_id` as a random intercept to account for game-specific contexts. By treating 
+`media_outlet` as a fixed effect, the model directly estimates narrative variation across ESPN, NYT Athletic,
+Sports Illustrated, and WNBA.com by allowing for outlet level differences to be interpreted rather than modeled
+as random effects.  This allowed for comparisons of narrative tone that are not confounded by differences in article size.
+
+The same scoring system for psychological and aftermath codes was used, an scores were standardized again by`snippet_count`, yielding per-snippet rates of narrative emphasis. This method ensured that any league or outlet differences were not confounded by variation in article length.
+```{r include=FALSE}
+# Define code groups
+cbt_psych <- c("c_att_ind_resilience", "c_att_self_efficacy", "c_att_team_efficacy_cohesion", 
+               "c_att_emotional_reg", "c_att_verbal_persuasion")
+
+opp_psych <- c("o_att_ind_resilience", "o_att_self_efficacy", "o_att_team_efficacy_cohesion", 
+               "o_att_emotional_reg", "o_att_verbal_persuasion")
+
+cbt_after <- c("c_aft_perf_outcome_lang", "c_aft_momentum_lang", "c_aft_draining_lang")
+
+opp_after <- c("o_aft_perf_outcome_lang", "o_aft_momentum_lang", "o_aft_draining_lang")
+
+snippet_cols <- c(cbt_psych, opp_psych, cbt_after, opp_after)
+
+# Calculate scores and snippet count
+updated_data <- text_data %>%
+  rowwise() %>%
+  mutate(
+    cbt_psych_score = sum(c_across(all_of(cbt_psych)), na.rm = TRUE),
+    opp_psych_score = sum(c_across(all_of(opp_psych)), na.rm = TRUE),
+    cbt_after_score = sum(c_across(all_of(cbt_after)), na.rm = TRUE),
+    opp_after_score = sum(c_across(all_of(opp_after)), na.rm = TRUE),
+    snippet_count = sum(c_across(all_of(snippet_cols)), na.rm = TRUE)
+  ) %>%
+  ungroup()
+
+# Group media outlets
+top_4_outlets <- c("ESPN", "NYT Athletic", "SI", "WNBA")
+
+updated_data <- updated_data %>%
+  filter(media_outlet %in% top_4_outlets) %>%
+  mutate(media_outlet_grouped = media_outlet)
+
+# Standardize outcome variables (per-snippet)
+updated_data <- updated_data %>%
+  mutate(
+    cbt_psych_score_std = cbt_psych_score / snippet_count,
+    opp_psych_score_std = opp_psych_score / snippet_count,
+    cbt_after_score_std = cbt_after_score / snippet_count,
+    opp_after_score_std = opp_after_score / snippet_count
+  )
+
+# Fit the models
+cbt_psych_model_std <- lmer(
+  cbt_psych_score_std ~ league + media_outlet_grouped + (1 | game_id),
+  data = updated_data
+)
+
+opp_psych_model_std <- lmer(
+  opp_psych_score_std ~ league + media_outlet_grouped + (1 | game_id),
+  data = updated_data
+)
+
+cbt_after_model_std <- lmer(
+  cbt_after_score_std ~ league + media_outlet_grouped + (1 | game_id),
+  data = updated_data
+)
+
+opp_after_model_std <- lmer(
+  opp_after_score_std ~ league + media_outlet_grouped + (1 | game_id),
+  data = updated_data
+)
+
+# View model summaries
+summary(cbt_psych_model_std)
+summary(opp_psych_model_std)
+summary(cbt_after_model_std)
+summary(opp_after_model_std)
+```
+
+```{r echo=FALSE}
+library(dplyr)
+library(knitr)
+library(kableExtra)
+
+# Function to extract fixed effects table from summary
+extract_fixed <- function(model, model_name) {
+  coefs <- summary(model)$coefficients
+  as.data.frame(coefs) %>%
+    tibble::rownames_to_column("Term") %>%
+    mutate(Model = model_name) %>%
+    select(Model, Term, Estimate, `Std. Error`, `t value`, `Pr(>|t|)`) %>%
+    rename(
+      `Std.Error` = `Std. Error`,
+      `t.value` = `t value`,
+      `p.value` = `Pr(>|t|)`
+    )
+}
+
+# Extract from each model
+cbt_psych_tbl <- extract_fixed(cbt_psych_model_std, "CBT Psych")
+opp_psych_tbl <- extract_fixed(opp_psych_model_std, "OPP Psych")
+cbt_after_tbl <- extract_fixed(cbt_after_model_std, "CBT Aftermath")
+opp_after_tbl <- extract_fixed(opp_after_model_std, "OPP Aftermath")
+
+# Combine into one table
+all_models_tbl <- bind_rows(cbt_psych_tbl, opp_psych_tbl, cbt_after_tbl, opp_after_tbl)
+
+library(kableExtra)
+
+# Function to display individual tables
+show_model_table <- function(df, model_name) {
+  df %>%
+    filter(Model == model_name) %>%
+    select(-Model) %>%
+    kable(digits = 3, caption = paste("Fixed Effects for", model_name)) %>%
+    kable_styling(bootstrap_options = c("striped", "condensed"), full_width = FALSE)
+}
+
+# Show each as its own table
+show_model_table(all_models_tbl, "CBT Psych")
+show_model_table(all_models_tbl, "OPP Psych")
+show_model_table(all_models_tbl, "CBT Aftermath")
+show_model_table(all_models_tbl, "OPP Aftermath")
+```
+
+
+#### Psychological Framing (Comeback Team)
+
+    - Intercept (NBA, ESPN baseline): On average, NBA comeback articles from ESPN contain 0.34 CBT 
+    psychological codes per snippet.
+    
+    - League effect: 
+    WNBA articles show a non-significant (p = 0.492) decrease of ~0.057 codes per snippet
+    compared to NBA articles, for the ESPN baseline.
+    There is no statistically significant difference in the rate of comeback team psychological 
+    framing between WNBA and NBA articles in top outlets.
+    
+    - Media outlet effects:
+    NYT Athletic shows a slgightly higher code rate (+0.053 codes per snippet), not significant (p = 0.485). 
+    SI shows a slightly lower code rate (–0.109), not significant (p = 0.234).
+    WNBA.com is close to the ESPN baseline (–0.017), also not significant (p = 0.893).
+    
+    - Random effects:
+    Game ID SD = 0.063 — modest article-level variability based on the game being covered.
+    
+#### Psychological Framing (Opponent Team)
+
+    - Intercept (NBA, ESPN baseline): Articles average 0.035 opponent psychological codes
+    per snippet, a very low frequency.
+    
+    - League and media effects:
+    None of the fixed effects were statistically significant, meaning opponent teams are 
+    rarely described using psychological attributes, and this pattern holds consistently 
+    across both leagues and all major outlets.
+    
+    - Random effects:
+    The model returned a boundary fit, meaning it detected no meaningful variation across games.
+    
+#### Aftermath Framing (Comeback Team)
+
+    -  Intercept (NBA, ESPN baseline): Articles contain ~0.34 aftermath codes per snippet, on average.
+    
+    - League effect:
+    WNBA articles published by ESPN tend to use ~0.10 more aftermath codes per snippet than NBA articles
+    (p = 0.196), so this is not statistically significant.
+    
+    - Media effects:
+    NYT Athletic shows a higher inclusion (0.084) of aftermath codes per snippet on average.
+    Sports Illustrated inclused 0.004 fewer aftermath codes per snipper on average.
+    WNBA.com included 0.091 fewer aftermath codes per snippet on average. 
+    Like psychological framing, none of these were statistically significant (all p > 0.2).
+    
+    - Random effects: 
+    Game ID SD = 0.071 — slightly higher variability based on specific games compared to
+    psychological framing codes for comeback teams.
+    
+#### Aftermath Framing (Opponent Team)
+
+    - Intercept (NBA, ESPN baseline): Articles contain ~0.28 aftermath codes per 
+    snippet for opponent teams.
+    
+    - League effect: 
+    ESPN WNBA articles use ~0.06 fewer opponent aftermath codes per snippet than NBA ones, 
+    but this is not significant (p = 0.51).
+    
+    - Media effects:
+    NYT Athletic articles averaged 0.12 fewer opponent aftermath codes per snippet.
+    Sports Illustrated articles included 0.11 more aftermath codes per snipper on average. 
+    On average, WNBA.com articles included 0.096 more opponent aftermath codes per snippet. 
+
+    - Random effects; 
+    Game ID SD = 0.057 — slightly lower game level variability in opponent aftermath framing
+    compared to psychological framing codes for comeback teams.
+
+The results of this section suggest a clear narrative emphasis on comeback teams, especially in the NBA, but limited statistical evidence of league-level differences in code usage frequency. The findings may be shaped in part by sample size, outlet representation, and the constrained nature of literal snippet coding. Still, they offer a meaningful first step toward quantifying how sports media constructs psychological narratives around comebacks. 
+
+### Quantitative Data: Collection and Analysis
+
+To explore whether the comeback narratives correspond to differences in game performance, a quantitative data set was compiled
+using play by play logs from `basketball-reference.com` the 12 selected major comeback games. For each game, a maximum six-minute window was 
+analyzed beginning at the moment of the first tie following the second half deficit. This narrow frame was selected to isolate the immediate
+aftermath of the tie, where shifts momentum and team execution are often most decisive. 
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(janitor)
+
+# Load and clean column names
+pbp_data <- read_csv("../data/processed/pbp_wnba_nba_data.csv") %>% 
+  clean_names()
+```
+
+The data set (`pbp_wnba_nba_data.csv`) includes manually collected performance based metrics for both the comeback team (`c_`) and
+their opponent (`o_`), using the following variables:
+
+    - points_scored
+    - points_allowed
+    - fg_made
+    - fg_attempts
+    - turnovers
+    - fouls_committed
+    - full_timeouts
+    
+These variables provide a more objective glimpse into which team performed more effectively, gained or lost momentum, the possible psychological drivers 
+that lead to a sustained win after a tie following a deficit, and the overall control of the game during the minutes following the comeback tie.
+Since narratives were mostly focused on the comeback team out performing the opponent team by all metrics, the following exploration and testing
+will be centered around that. 
+
+### Exporatory Analysis
+#### Points Scored vs. Points Allowed
+```{r echo=FALSE, message=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+pbp_data %>%
+  group_by(league) %>%
+  summarise(across(
+    c(c_points_scored, c_points_allowed),
+    mean, na.rm = TRUE
+  )) %>%
+  pivot_longer(-league, names_to = "metric", values_to = "mean_value") %>%
+  ggplot(aes(x = metric, y = mean_value, fill = league)) +
+  geom_col(position = "dodge") +
+  labs(
+    title = "Points Scored vs. Points Allowed (CBT)",
+    x = "Metric",
+    y = "Mean Value"
+  ) +
+  theme_minimal()
+```
+
+In both leagues, CBTs outscored their opponents in the aftermath window among this sample. WNBA teams averaged a score of 11.75
+points, and NBA teams averaged a score 10.08 points within the six minute max aftermath, which supports the heavy narrative focus on comeback team 
+success and performance outcome framing (`c_aft_perf_outcome_lang`). Opponents were also coded for performance outcomes (`o_aft_perf_outcome_lang`),
+but far less frequently which is also mirrored in the lower points allowed and reduced coverage of opponent psychological code.
+
+#### Other Metrics of Performance by League 
+```{r echo=FALSE}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(stringr)
+
+pbp_data %>%
+  group_by(league) %>%
+  summarise(across(
+    c(o_turnovers, o_fouls_committed, o_full_timeouts, 
+      c_turnovers, c_fouls_committed, c_full_timeouts),
+    mean, na.rm = TRUE
+  )) %>%
+  pivot_longer(-league, names_to = "metric", values_to = "mean_value") %>%
+  mutate(metric = str_replace(metric, "fouls_committed", "fouls")) %>%
+  ggplot(aes(x = metric, y = mean_value, fill = league)) +
+  geom_col(position = "dodge") +
+  labs(
+    title = "Non Shooting Metrics by League",
+    x = "Metric",
+    y = "Mean Value"
+  ) +
+  theme_minimal()
+```
+
+In the six-minute aftermath window, WNBA CBTs average over three times as many fouls as their NBA counterparts (≈2.5 vs. 0.7 per game) and turn the ball over more often (≈1.2 vs. 0.2), yet call fewer timeouts (≈0.5 vs. 0.7). These sample-based averages paint NBA comebacks as low-error affairs managed with strategic timeouts, whereas WNBA comebacks unfold as higher-error battles with less reliance on clock management where WNBA opponents tend to succumb more to turnovers than to fouls or timeout tactics.
+
+```{r echo=FALSE}
+pbp_data %>%
+  group_by(league) %>%
+  summarise(
+    c_fg_made = mean(c_fg_made, na.rm = TRUE),
+    c_fg_attempts = mean(c_fg_attempts, na.rm = TRUE),
+    o_fg_made = mean(o_fg_made, na.rm = TRUE),
+    o_fg_attempts = mean(o_fg_attempts, na.rm = TRUE)
+  ) %>%
+  mutate(
+    c_fg_percent = c_fg_made / c_fg_attempts,
+    o_fg_percent = o_fg_made / o_fg_attempts
+  ) %>%
+  rename(
+    `CBT FG Made` = c_fg_made,
+    `CBT FG Attempts` = c_fg_attempts,
+    `CBT FG %` = c_fg_percent,
+    `OPP FG Made` = o_fg_made,
+    `OPP FG Attempts` = o_fg_attempts,
+    `OPP FG %` = o_fg_percent
+  )  %>% style_table("Average FG Percentage Comparison")
+```
+
+In this sample, NBA CBTs shot with 68.6% (4.00 / 5.83) accuracy in field goals in the six-minute aftermath of their ties, while their opponents managed just 26.3% (1.67 / 6.33), creating a dramatic gap that likely fuels narratives of dominant resilience and momentum. By contrast, WNBA comebacks were more tightly contested, with CBTs shooting a 53.5% (3.83 / 7.17) accuracy on average versus a 40.0% (3.00 / 7.50) average accuracy by their opponents, suggesting a more balanced exchange of execution and offering subtler grounds for storytelling around psychological edge.
+
+### Testing League Level Comeback Aftermath Differences
+To evaluate the statistical significance of the post-comeback performance differences, three hypothesis tests were conducted comparing comeback-team and opponent metrics within the six-minute aftermath window.
+
+#### Do comeback teams statistically outperform their opponents in the aftermath, regardless of league?
+Across the 12 comeback games in the sample, CBTs significantly outperformed their opponents during the six-minute window following the tie:
+```{r echo=FALSE}
+library(tidyverse)
+
+# Calculate FG%
+pbp_data <- pbp_data %>%
+  mutate(
+    c_fg_pct = c_fg_made / c_fg_attempts,
+    o_fg_pct = o_fg_made / o_fg_attempts
+  )
+
+# Run all tests and store results
+points_test <- t.test(pbp_data$c_points_scored, pbp_data$c_points_allowed, paired = TRUE)
+fg_test <- t.test(pbp_data$c_fg_pct, pbp_data$o_fg_pct, paired = TRUE)
+turnover_test <- t.test(pbp_data$c_turnovers, pbp_data$o_turnovers, paired = TRUE)
+foul_test <- t.test(pbp_data$c_fouls_committed, pbp_data$o_fouls_committed, paired = TRUE)
+timeout_test <- t.test(pbp_data$c_full_timeouts, pbp_data$o_full_timeouts, paired = TRUE)
+
+# Build summary table
+tibble(
+  Metric = c("Points Scored", "FG %", "Turnovers", "Fouls Committed", "Full Timeouts"),
+  Mean_Diff = c(
+    points_test$estimate,
+    fg_test$estimate,
+    turnover_test$estimate,
+    foul_test$estimate,
+    timeout_test$estimate
+  ),
+  t_stat = c(
+    points_test$statistic,
+    fg_test$statistic,
+    turnover_test$statistic,
+    foul_test$statistic,
+    timeout_test$statistic
+  ),
+  p_value = c(
+    points_test$p.value,
+    fg_test$p.value,
+    turnover_test$p.value,
+    foul_test$p.value,
+    timeout_test$p.value
+  ),
+  CI_lower = c(
+    points_test$conf.int[1],
+    fg_test$conf.int[1],
+    turnover_test$conf.int[1],
+    foul_test$conf.int[1],
+    timeout_test$conf.int[1]
+  ),
+  CI_upper = c(
+    points_test$conf.int[2],
+    fg_test$conf.int[2],
+    turnover_test$conf.int[2],
+    foul_test$conf.int[2],
+    timeout_test$conf.int[2]
+  )
+) %>% style_table()
+```
+
+Overall, CBTs generally displayed superior performance in the immediate aftermath of tying the score, especially in terms of scoring, efficiency, and ball control. On average, CBTs scored 5.08 more points than their opponents (p = 0.0005), demonstrating clear offensive superiority. They also shot more efficiently, with a field goal percentage 0.367 higher than their opponents (p = 0.0017), and committed 1.25 fewer turnovers on average (p = 0.0086), highlighting stronger ball control during this critical stretch. There was no significant difference in fouls committed between CBTs and opponents (mean difference = +0.17, p = 0.701), and while CBTs used slightly fewer timeouts (mean difference = –0.42), this difference was not statistically significant (p = 0.137). Together, these results indicate that CBTs when not separated by league tended to play more effectively and with greater composure in the immediate aftermath of tying the game.
+
+#### Do NBA vs WNBA comeback performances differ?
+Not significantly. When comparing NBA and WNBA CBTs in the 6-minute aftermath window across the sample, differences in performance were modest and statistically non-significant, though small trends emerged:
+
+```{r echo=FALSE}
+library(tidyverse)
+
+# Calculate FG% for CBT
+pbp_data <- pbp_data %>%
+  mutate(
+    c_fg_pct = c_fg_made / c_fg_attempts
+  )
+
+# Run t-tests comparing CBT metrics across leagues
+points_test <- t.test(c_points_scored ~ league, data = pbp_data)
+fg_test <- t.test(c_fg_pct ~ league, data = pbp_data)
+turnover_test <- t.test(c_turnovers ~ league, data = pbp_data)
+foul_test <- t.test(c_fouls_committed ~ league, data = pbp_data)
+timeout_test <- t.test(c_full_timeouts ~ league, data = pbp_data)
+
+# Build summary table
+tibble(
+  Metric = c("Points Scored", "FG %", "Turnovers", "Fouls Committed", "Full Timeouts"),
+  Mean_Diff = c(
+    diff(rev(points_test$estimate)),
+    diff(rev(fg_test$estimate)),
+    diff(rev(turnover_test$estimate)),
+    diff(rev(foul_test$estimate)),
+    diff(rev(timeout_test$estimate))
+  ),
+  t_stat = c(
+    points_test$statistic,
+    fg_test$statistic,
+    turnover_test$statistic,
+    foul_test$statistic,
+    timeout_test$statistic
+  ),
+  p_value = c(
+    points_test$p.value,
+    fg_test$p.value,
+    turnover_test$p.value,
+    foul_test$p.value,
+    timeout_test$p.value
+  ),
+  CI_lower = c(
+    points_test$conf.int[1],
+    fg_test$conf.int[1],
+    turnover_test$conf.int[1],
+    foul_test$conf.int[1],
+    timeout_test$conf.int[1]
+  ),
+  CI_upper = c(
+    points_test$conf.int[2],
+    fg_test$conf.int[2],
+    turnover_test$conf.int[2],
+    foul_test$conf.int[2],
+    timeout_test$conf.int[2]
+  )
+) %>% style_table()
+```
+
+When comparing NBA and WNBA comeback team (CBT) performance during the aftermath period across the 12-game sample, no statistically significant differences emerged. WNBA CBTs scored slightly more points than NBA CBTs on average (mean difference = –1.17, p = 0.718), but this gap was negligible. NBA CBTs shot somewhat more efficiently, with a field goal percentage advantage of +0.199, a difference that approached significance (p = 0.115). Notably, WNBA CBTs committed more turnovers than NBA CBTs (mean difference = –1.00, p = 0.094), a trend visible in the chart where WNBA CBTs show higher mean turnovers. WNBA CBTs also  committed more fouls (mean difference = –1.83, p = 0.129), and the chart reflects this with a visibly higher bar for WNBA fouls compared to NBA. Timeout usage appeared similar across leagues (mean difference = +0.17, p = 0.688). Overall, while the performance patterns in non-shooting metrics (fouls, turnovers, timeouts) differ somewhat between leagues, these differences did not reach conventional levels of statistical significance in this sample.
+
+#### Is the performance gap between comeback teams and their opponents larger in NBA vs. WNBA?
+Not statistically, but the 12-game sample suggests that NBA comebacks may involve larger momentum swings, especially in points and shooting:
+```{r echo=FALSE}
+library(tidyverse)
+
+# Create performance gap variables
+pbp_data <- pbp_data %>%
+  mutate(
+    points_diff = c_points_scored - c_points_allowed,
+    fg_pct_diff = (c_fg_made / c_fg_attempts) - (o_fg_made / o_fg_attempts),
+    turnovers_diff = o_turnovers - c_turnovers,  # higher = better for CBT
+    fouls_diff = o_fouls_committed - c_fouls_committed,  # higher = better
+    timeouts_diff = o_full_timeouts - c_full_timeouts
+  )
+
+# Run t-tests comparing CBT–OPP difference scores by league
+points_test <- t.test(points_diff ~ league, data = pbp_data)
+fg_test <- t.test(fg_pct_diff ~ league, data = pbp_data)
+turnover_test <- t.test(turnovers_diff ~ league, data = pbp_data)
+foul_test <- t.test(fouls_diff ~ league, data = pbp_data)
+timeout_test <- t.test(timeouts_diff ~ league, data = pbp_data)
+
+# Build summary table
+tibble(
+  Metric = c("Points Diff", "FG% Diff", "Turnovers Diff", "Fouls Diff", "Timeouts Diff"),
+  Mean_Diff = c(
+    diff(rev(points_test$estimate)),
+    diff(rev(fg_test$estimate)),
+    diff(rev(turnover_test$estimate)),
+    diff(rev(foul_test$estimate)),
+    diff(rev(timeout_test$estimate))
+  ),
+  t_stat = c(
+    points_test$statistic,
+    fg_test$statistic,
+    turnover_test$statistic,
+    foul_test$statistic,
+    timeout_test$statistic
+  ),
+  p_value = c(
+    points_test$p.value,
+    fg_test$p.value,
+    turnover_test$p.value,
+    foul_test$p.value,
+    timeout_test$p.value
+  ),
+  CI_lower = c(
+    points_test$conf.int[1],
+    fg_test$conf.int[1],
+    turnover_test$conf.int[1],
+    foul_test$conf.int[1],
+    timeout_test$conf.int[1]
+  ),
+  CI_upper = c(
+    points_test$conf.int[2],
+    fg_test$conf.int[2],
+    turnover_test$conf.int[2],
+    foul_test$conf.int[2],
+    timeout_test$conf.int[2]
+  )
+) %>% style_table()
+```
+
+On average, NBA CBTs outscored their opponents by 3.50 more points than WNBA CBTs did (p = 0.099), a difference that approached significance. Similarly, the NBA showed a slightly larger advantage in field goal percentage over opponents, with a mean gap of +0.33 (p = 0.062), again nearly significant. Differences in other metrics were smaller and not meaningful: the turnover gap (p = 0.843) and timeout gap (p = 0.361) were minimal, while NBA games showed a modestly larger foul margin (p = 0.268) that did not reach significance. Overall, these patterns hint that NBA comebacks may feature somewhat larger aftermath performance margins, but the evidence in this sample is not strong enough to conclude that league consistently shapes the size of the performance gap.
+
+### Modeling the Impact of League, Team Role, and Tie Timing on Performance
+
+The following models allow us to estimate how league, team role, and the timing of the tie relate to performance metrics during the aftermath window.
+
+Each individual model predicted a specific performance outcome in the aftermath of a comeback tie, including:
+
+    - Points Scored  
+    - Field Goal Percentage (FG%)  
+    - Turnovers  
+    - Fouls Committed  
+    - Timeouts Taken
+
+Each model included the following predictors:
+
+    - League (NBA or WNBA)  
+    - Team Role (Comeback Team [CBT] or Opponent [OPP])  
+    - Tie Quarter (the quarter when the score first tied in the second half)  
+    - Tie Minutes Remaining (minutes remaining in the quarter at the time of the tie)
+
+```{r include=FALSE}
+# Calculate tie_min_remaining correctly
+pbp_data <- pbp_data %>%
+  separate(tie_time_min_sec_mili, into = c("min", "sec", "ms"), sep = ":", convert = TRUE) %>%
+  mutate(
+    # Convert min:sec to decimal minutes
+    tie_qtr_min_remaining = min + sec / 60,
+    # Assign quarter length by league
+    quarter_length = ifelse(league == "NBA", 12, 10),
+    # Total minutes remaining in game
+    tie_min_remaining = tie_qtr_min_remaining + (4 - tie_quarter) * quarter_length
+  )
+
+# Create o_points_scored
+pbp_data <- pbp_data %>%
+  mutate(o_points_scored = c_points_allowed)
+
+# Reshape data to long format
+pbp_long <- pbp_data %>%
+  pivot_longer(
+    cols = c(c_points_scored, o_points_scored,
+             c_fg_made, o_fg_made,
+             c_fg_attempts, o_fg_attempts,
+             c_turnovers, o_turnovers,
+             c_fouls_committed, o_fouls_committed,
+             c_full_timeouts, o_full_timeouts),
+    names_to = c("team_role", ".value"),
+    names_pattern = "([co])_(.*)"
+  ) %>%
+  mutate(
+    team_role = recode(team_role, "c" = "CBT", "o" = "OPP"),
+    fg_pct = ifelse(fg_attempts > 0, fg_made / fg_attempts, NA_real_),
+    league = factor(league),
+    team_role = factor(team_role)
+  ) %>%
+  select(game_id, league, team_role, tie_quarter, tie_min_remaining,
+         points_scored, fg_pct, turnovers, fouls_committed, full_timeouts)
+
+# Fit models
+points_model <- lm(points_scored ~ league + team_role + tie_quarter + tie_min_remaining, data = pbp_long)
+fg_model <- lm(fg_pct ~ league + team_role + tie_quarter + tie_min_remaining, data = pbp_long)
+turnover_model <- lm(turnovers ~ league + team_role + tie_quarter + tie_min_remaining, data = pbp_long)
+foul_model <- lm(fouls_committed ~ league + team_role + tie_quarter + tie_min_remaining, data = pbp_long)
+timeout_model <- lm(full_timeouts ~ league + team_role + tie_quarter + tie_min_remaining, data = pbp_long)
+
+# View summaries
+summary(points_model)
+summary(fg_model)
+summary(turnover_model)
+summary(foul_model)
+summary(timeout_model)
+```
+
+```{r echo=FALSE}
+# Helper function to convert lm summary to data frame
+extract_lm_coefs <- function(model, model_name) {
+  coefs <- summary(model)$coefficients
+  as.data.frame(coefs) %>%
+    tibble::rownames_to_column("Term") %>%
+    mutate(Model = model_name) %>%
+    select(Model, Term, Estimate, `Std. Error`, `t value`, `Pr(>|t|)`) %>%
+    rename(
+      `Std.Error` = `Std. Error`,
+      `t.value` = `t value`,
+      `p.value` = `Pr(>|t|)`
+    )
+}
+
+# Apply to each model
+points_tbl <- extract_lm_coefs(points_model, "Points Scored")
+fg_tbl <- extract_lm_coefs(fg_model, "FG %")
+turnover_tbl <- extract_lm_coefs(turnover_model, "Turnovers")
+foul_tbl <- extract_lm_coefs(foul_model, "Fouls")
+timeout_tbl <- extract_lm_coefs(timeout_model, "Timeouts")
+
+# Combine all
+all_models_tbl <- bind_rows(points_tbl, fg_tbl, turnover_tbl, foul_tbl, timeout_tbl)
+
+# Display tables separately
+show_model_table <- function(df, model_name) {
+  df %>%
+    filter(Model == model_name) %>%
+    select(-Model) %>%
+    kable(digits = 3, caption = paste("Summary of Results for", model_name)) %>%
+    kable_styling(bootstrap_options = c("striped", "condensed"), full_width = FALSE)
+}
+
+show_model_table(all_models_tbl, "Points Scored")
+show_model_table(all_models_tbl, "FG %")
+show_model_table(all_models_tbl, "Turnovers")
+show_model_table(all_models_tbl, "Fouls")
+show_model_table(all_models_tbl, "Timeouts")
+```
+
+Team role was the most consistent predictor of performance during the aftermath period, holding other variables constant. OPPs scored about 5 points fewer than CBTs on average (p = 0.0015), shot roughly 37% worse in FG% (p = 0.0006), and committed 1.25 more turnovers (p = 0.013). These findings reinforce the pattern of CBT dominance in scoring efficiency and ball control. While team role did not significantly predict fouls or timeouts, there was a positive trend suggesting OPPs might take slightly more timeouts following a tie (p = 0.116).
+
+Tie timing also influenced performance. Later ties were linked to higher point totals, with both tie quarter (p = 0.00022) and tie minutes remaining (p < 0.0001) emerging as significant predictors of points scored. Fouls were also affected by tie timing: later tie quarters were associated with more fouls (p = 0.045), and tie minutes remaining showed a marginally significant positive effect (p = 0.064). Tie timing did not significantly affect FG%, turnovers, or timeout use once other factors were accounted for.
+
+League did not show significant independent effects on any of the metrics in these models. This suggests that once team role and tie timing were controlled, comeback aftermath patterns looked broadly similar across NBA and WNBA games. Altogether, the models point to team role and tie timing as the primary drivers of aftermath performance differences.
+
+### Summaries, Discussion, Limitations, & Final Remarks
+#### Qualitative Data Summary 
+The qualitative analysis revealed consistent asymmetry in media framing of comebacks. Across both NBA and WNBA coverage, CBTs were far more associated with psychological and aftermath-related codes, especially performance outcomes, resilience, and team cohesion, while opponent teams were rarely described in psychological terms, resulting in too little variance for some models to predict anything. The most common code was `c_aft_perf_outcome_lang`, showing a focus on what happened rather than why. Differences across media outlets were subtle. NYT Athletic emphasized performance outcomes more, and Sports Illustrated highlighted team-based themes, but these patterns were not statistically significant once snippet count was controlled for. Gendered language was absent, and WNBA games generally received shorter, less detailed coverage. While NBA articles contained more comeback team codes in absolute terms, league-level differences did not reach significance, and opponent narratives were sparse throughout.
+
+#### Quantitative Data Summary
+The quantitative analyses highlight that CBTs  consistently outperformed their opponents in the immediate aftermath of tying the game, particularly in scoring, field goal efficiency, and ball control. While both NBA and WNBA CBTs averaged higher points than their opponents, NBA comebacks showed larger gaps in shooting accuracy and points differential, although these league-level differences were not statistically significant in this sample. The timing of the tie also played a role: later ties within a quarter were linked to more points scored and, to a lesser extent, more fouls. Tie quarter influenced timeout use, with later quarters seeing increased reliance on timeouts. Overall, these patterns support the idea that CBTs seized and maintained momentum following a tie, with relatively consistent performance patterns across leagues.
+
+#### Discussion 
+Together, the qualitative and quantitative analyses paint a pretty picture of how comeback performances are both played and perceived. The qualitative data show that media narratives overwhelmingly focus on comeback teams, emphasizing their resilience, cohesion, and outcomes, while opponents receive minimal psychological framing. This mirrors the quantitative findings, where CBTs consistently outperformed their opponents in key metrics such as points scored, shooting efficiency, and turnovers, especially in the immediate aftermath of tying the game. Media emphasis on what happened, rather than why, aligns with the clear statistical evidence of comeback team dominance in this critical window. Although league-level narrative and performance differences were modest and not statistically significant, NBA comebacks tended to feature larger performance gaps, which may help explain why NBA narratives leaned more heavily on psychological strength and momentum. The role of tie timing, with later ties linked to higher scoring and greater reliance on timeouts, also complements the media’s focus on decisive moments that shift the game’s trajectory. In sum, both the media framing and the game data point toward CBTs as the central agents of control and success in these pivotal moments.
+
+#### Limitations
+This study has several limitations that should be considered when interpreting the results. First, the sample size was small, comprising only 12 comeback games, which limits statistical power and the generalizability of findings. The analysis focused solely on successful comebacks where the comeback team tied the score and ultimately won the game. As a result, the study does not account for teams that mounted comebacks but went on to lose, limiting our ability to understand the full range of comeback dynamics and how media narratives might differ in those cases. Similarly, the qualitative data set was shaped by the availability and length of media coverage, with WNBA games receiving fewer and shorter articles, which constrained the volume and diversity of narrative data. The absence of gendered language and sparse opponent-focused codes may reflect both genuine shifts in reporting practices and limitations in the codebook’s ability to capture more subtle or implicit framing. Additionally, manual data collection from play-by-play logs, while thorough, introduces potential for human error. Lastly, the six-minute aftermath window, while useful for isolating immediate performance shifts, may not fully capture longer-term dynamics that contribute to comeback success or media storytelling.
+
+#### Final Remarks
+The data highlights consistent advantages for CBTs in the immediate aftermath of a tie, particularly in scoring, efficiency, and ball control. Media narratives reflected and often emphasized these successes, but gave little attention to the psychology or performance of opponents. The absence of comeback attempts that ultimately failed represents an avenue for future research, as understanding both successful and unsuccessful comebacks could offer a more complete picture of momentum, resilience, and media framing in high-stakes competition.

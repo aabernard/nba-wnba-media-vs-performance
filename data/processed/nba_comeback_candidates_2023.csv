@@ -1,0 +1,8 @@
+Game_Date,Home_Team,Away_Team,Halftime_Score_Home,Halftime_Score_Away,Final_Score_Home,Final_Score_Away,Game_URL,Halftime_Deficit_Amount,Trailing_Team_Halftime
+"5:00 PM, November 5, 2022",ORL,SAC,65,47,123,126,https://www.basketball-reference.com/boxscores/202211050ORL.html,18,SAC
+"7:00 PM, January 2, 2023",CLE,CHI,47,65,145,134,https://www.basketball-reference.com/boxscores/202301020CLE.html,18,CLE
+"9:00 PM, January 22, 2023",POR,LAL,71,46,112,121,https://www.basketball-reference.com/boxscores/202301220POR.html,25,LAL
+"7:00 PM, February 3, 2023",WAS,POR,69,51,116,124,https://www.basketball-reference.com/boxscores/202302030WAS.html,18,POR
+"6:00 PM, February 4, 2023",BRK,WAS,55,73,125,123,https://www.basketball-reference.com/boxscores/202302040BRK.html,18,BRK
+"8:00 PM, March 17, 2023",SAS,MEM,69,46,120,126,https://www.basketball-reference.com/boxscores/202303170SAS.html,23,MEM
+"4:00 PM, March 19, 2023",SAS,ATL,61,83,126,118,https://www.basketball-reference.com/boxscores/202303190SAS.html,22,SAS

@@ -18,11 +18,13 @@ This study combines:
 
 ## Repo Structure
 ```
+docs/
+│   ├── comeback_literature_review.pdf
+│   ├── literature_review_notes.pdf
+│   ├── qualitative_data_codebook.pdf
+│   ├── qualitative_data_coding_prompt.pdf
 data/
 ├── raw/
-│   ├── docs/
-│   │   └── qualitative_data_codebook.pdf
-│   │   └── qualitative_data_coding_prompt.pdf
 │   ├── nba_raw_data_2023.csv
 │   ├── nba_raw_data_2024.csv
 │   ├── nba_raw_text_data.csv

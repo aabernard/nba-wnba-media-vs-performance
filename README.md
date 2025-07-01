@@ -55,7 +55,7 @@ output/
 The `scripts/` directory includes:
 - `nba_scraper.py`: Python script for scraping NBA game data from basketball-reference.com.
 - `wnba_scraper.py`: Python script for scraping WNBA game data from basketball-reference.com.
-- Both scrapers are current as of June 2025 and were developed to fill a gap since the last similar scraper (2018).  
+- Both scrapers are current as of June 2025 and were developed to fill a gap since the last similar scraper.  
 - These scripts (along with the text aggregator or comeback candidate analyzer) can be used independently to generate or update datasets for further research.
 
 ## How to Run
